@@ -1,0 +1,3 @@
+IsoSeqX_bc06_5p--IsoSeqX_3p	cmh008496-01
+IsoSeqX_bc10_5p--IsoSeqX_3p	WTIPSC
+IsoSeqX_bc11_5p--IsoSeqX_3p	caVal-033

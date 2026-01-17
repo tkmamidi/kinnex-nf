@@ -1,0 +1,15 @@
+name: scKinnex
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - lima
+  - isoseq
+  - isoseq3
+  - pbmm2
+  - pbpigeon
+  - pbskera
+  - pbtk
+  - samtools
+  - minimap2

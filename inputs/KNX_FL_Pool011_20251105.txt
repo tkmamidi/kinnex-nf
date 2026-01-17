@@ -1,0 +1,1 @@
+KNX_FL_Pool011	/pbdata/r84052_20250925_215153/1_D01/hifi_reads/m84052_250926_020407_s3.hifi_reads.bcM0001.bam	/cluster/home/ipushel/Kinnex/inputs/KNX_FL_Pool011_barcodes_20251105.csv

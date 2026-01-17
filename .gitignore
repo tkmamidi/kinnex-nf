@@ -1,0 +1,6 @@
+*.log
+*.err
+*.out
+.nextflow
+nextflow_work
+results
