@@ -7,6 +7,7 @@ process PIGEON_CLASSIFY {
     path ref_annotation
     path ref_annotation_pgi  // Pigeon index file for annotation
     path ref_genome
+    path ref_genome_fai      // FASTA index file
 
     output:
     tuple val(meta), path("*_classification.txt"), emit: classification

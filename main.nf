@@ -97,6 +97,7 @@ workflow {
 
     // Create reference channels
     ch_ref_genome     = Channel.fromPath(refs.fasta, checkIfExists: true).collect()
+    ch_ref_genome_fai = Channel.fromPath("${refs.fasta}.fai", checkIfExists: true).collect()
     ch_ref_annotation = refs.gtf ? Channel.fromPath(refs.gtf, checkIfExists: true).collect() : Channel.empty()
     ch_ref_annotation_pgi = refs.gtf ? Channel.fromPath("${refs.gtf}.pgi", checkIfExists: true).collect() : Channel.empty()
     ch_mas8_primers   = params.mas8_primers ? Channel.fromPath(params.mas8_primers, checkIfExists: true).collect() : Channel.empty()
@@ -214,7 +215,8 @@ workflow {
             ch_saturation,
             ch_ref_annotation,
             ch_ref_annotation_pgi,
-            ch_ref_genome
+            ch_ref_genome,
+            ch_ref_genome_fai
         )
         ch_versions = ch_versions.mix(PIGEON.out.versions)
     }

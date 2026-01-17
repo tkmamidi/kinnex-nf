@@ -17,6 +17,7 @@ workflow PIGEON {
     ch_ref_annotation  // channel: path(gtf)
     ch_ref_annotation_pgi  // channel: path(pgi) - pigeon index for annotation
     ch_ref_genome      // channel: path(fasta)
+    ch_ref_genome_fai  // channel: path(fai) - FASTA index file
 
     main:
     ch_versions = Channel.empty()
@@ -39,7 +40,8 @@ workflow PIGEON {
         ch_classify_input,
         ch_ref_annotation,
         ch_ref_annotation_pgi,
-        ch_ref_genome
+        ch_ref_genome,
+        ch_ref_genome_fai
     )
     ch_versions = ch_versions.mix(PIGEON_CLASSIFY.out.versions)
 
