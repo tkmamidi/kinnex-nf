@@ -47,9 +47,10 @@ workflow PIGEON {
 
     // Step 3: Filter classifications
     ch_filter_input = PIGEON_CLASSIFY.out.classification
+        .join(PIGEON_CLASSIFY.out.junctions)
         .join(PIGEON_PREPARE.out.gff)
-        .map { meta, classification, sorted_gff ->
-            [ meta, classification, sorted_gff ]
+        .map { meta, classification, junctions, sorted_gff ->
+            [ meta, classification, junctions, sorted_gff ]
         }
 
     PIGEON_FILTER(

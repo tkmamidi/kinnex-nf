@@ -3,7 +3,7 @@ process PIGEON_FILTER {
     label 'process_medium'
 
     input:
-    tuple val(meta), path(classification), path(sorted_gff)
+    tuple val(meta), path(classification), path(junctions), path(sorted_gff)
 
     output:
     tuple val(meta), path("*_classification.filtered_lite_classification.txt"), emit: filtered_classification
