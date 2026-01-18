@@ -206,13 +206,9 @@ workflow {
      * STEP 5: PIGEON CLASSIFICATION (per sample)
      */
     if (!params.skip_pigeon) {
-        // Create empty saturation channel (saturation file is optional)
-        ch_saturation = Channel.empty()
-
         PIGEON(
             ISOSEQ.out.collapsed_gff,
             ISOSEQ.out.flnc_count,
-            ch_saturation,
             ch_ref_annotation,
             ch_ref_annotation_pgi,
             ch_ref_genome,

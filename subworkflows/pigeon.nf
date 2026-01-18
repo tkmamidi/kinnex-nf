@@ -13,7 +13,6 @@ workflow PIGEON {
     take:
     ch_collapsed_gff   // channel: [ val(meta), path(gff) ]
     ch_flnc_count      // channel: [ val(meta), path(txt) ]
-    ch_saturation      // channel: [ val(meta), path(txt) ] - from samplesheet or empty
     ch_ref_annotation  // channel: path(gtf)
     ch_ref_annotation_pgi  // channel: path(pgi) - pigeon index for annotation
     ch_ref_genome      // channel: path(fasta)
@@ -58,17 +57,10 @@ workflow PIGEON {
     )
     ch_versions = ch_versions.mix(PIGEON_FILTER.out.versions)
 
-    // Step 4: Generate report
-    // Join filtered classification with saturation data if available
-    // If no saturation channel provided, use empty file placeholder
-    ch_report_input = PIGEON_FILTER.out.filtered_classification
-        .join(ch_saturation, remainder: true)
-        .map { meta, filtered_class, saturation ->
-            [ meta, filtered_class, saturation ?: [] ]
-        }
-
+    // Step 4: Generate saturation report
+    // pigeon report takes classification as input and generates saturation.txt as output
     PIGEON_REPORT(
-        ch_report_input
+        PIGEON_FILTER.out.filtered_classification
     )
     ch_versions = ch_versions.mix(PIGEON_REPORT.out.versions)
 
@@ -77,6 +69,8 @@ workflow PIGEON {
     classification          = PIGEON_CLASSIFY.out.classification          // channel: [ val(meta), path(txt) ]
     junctions               = PIGEON_CLASSIFY.out.junctions               // channel: [ val(meta), path(txt) ]
     filtered_classification = PIGEON_FILTER.out.filtered_classification   // channel: [ val(meta), path(txt) ]
+    filter_report           = PIGEON_FILTER.out.report                    // channel: [ val(meta), path(json) ]
+    saturation              = PIGEON_REPORT.out.saturation                // channel: [ val(meta), path(txt) ]
     report                  = PIGEON_REPORT.out.report                    // channel: [ val(meta), path(json) ]
     versions                = ch_versions                                  // channel: path(versions.yml)
 }

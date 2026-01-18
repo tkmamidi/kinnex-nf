@@ -3,9 +3,10 @@ process PIGEON_REPORT {
     label 'process_low'
 
     input:
-    tuple val(meta), path(filtered_classification), path(saturation)
+    tuple val(meta), path(filtered_classification)
 
     output:
+    tuple val(meta), path("*.saturation.txt"), emit: saturation
     tuple val(meta), path("*.report.json"), emit: report
     path "versions.yml", emit: versions
 
@@ -15,12 +16,11 @@ process PIGEON_REPORT {
     script:
     def args = task.ext.args ?: params.pigeon_report_extra_args ?: ''
     def prefix = task.ext.prefix ?: "${meta.sample}"
-    def saturation_arg = saturation ? "${saturation}" : ''
     """
     pigeon report \\
         ${args} \\
         ${filtered_classification} \\
-        ${saturation_arg}
+        ${prefix}.saturation.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

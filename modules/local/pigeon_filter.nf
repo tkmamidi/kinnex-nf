@@ -9,6 +9,8 @@ process PIGEON_FILTER {
     tuple val(meta), path("*_classification.filtered_lite_classification.txt"), emit: filtered_classification
     tuple val(meta), path("*_classification.filtered_lite_reasons.txt"), emit: filtered_reasons, optional: true
     tuple val(meta), path("*.filtered_lite.gff"), emit: filtered_gff, optional: true
+    tuple val(meta), path("*.filtered.report.json"), emit: report
+    tuple val(meta), path("*.filtered.summary.txt"), emit: summary, optional: true
     path "versions.yml", emit: versions
 
     when:
