@@ -71,6 +71,5 @@ workflow PIGEON {
     filtered_classification = PIGEON_FILTER.out.filtered_classification   // channel: [ val(meta), path(txt) ]
     filter_report           = PIGEON_FILTER.out.report                    // channel: [ val(meta), path(json) ]
     saturation              = PIGEON_REPORT.out.saturation                // channel: [ val(meta), path(txt) ]
-    report                  = PIGEON_REPORT.out.report                    // channel: [ val(meta), path(json) ]
     versions                = ch_versions                                  // channel: path(versions.yml)
 }

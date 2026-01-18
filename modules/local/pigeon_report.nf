@@ -7,7 +7,6 @@ process PIGEON_REPORT {
 
     output:
     tuple val(meta), path("*.saturation.txt"), emit: saturation
-    tuple val(meta), path("*.report.json"), emit: report
     path "versions.yml", emit: versions
 
     when:

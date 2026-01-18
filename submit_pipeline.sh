@@ -25,8 +25,8 @@ INPUT_TSV="${PROJECT_DIR}/assets/samplesheet.tsv"
 # Output directory
 OUTDIR="${PROJECT_DIR}/results"
 
-# Nextflow work directory (stores intermediate files)
-WORK_DIR="${PROJECT_DIR}/nextflow_work"
+# Nextflow work directory (stores intermediate files - using scratch for faster I/O)
+WORK_DIR="/scratch/tmamidi/kinnex_work"
 
 # Temp directory
 TMPDIR_PATH="/scratch"
