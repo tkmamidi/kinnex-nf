@@ -60,14 +60,23 @@ unset PYTHONHOME
 source /software/python/conda3/etc/profile.d/conda.sh
 
 # Java 17 (required for Nextflow)
-export JAVA_HOME="/software/java/java17"
+export JAVA_HOME="/software/java/java11"
 export PATH="${JAVA_HOME}/bin:$PATH"
 
 # Nextflow JAR file (using Java directly due to permission issues)
 NEXTFLOW_JAR="/software/nextflow/current/nextflow-23.04.4-all"
 
-# JVM options to allow module access (required for Java 17+)
-JAVA_OPTS="--add-opens java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED"
+# JVM options for the main process
+JAVA_OPTS="--add-opens java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED \
+--add-opens java.base/java.lang=ALL-UNNAMED \
+--add-opens java.base/java.util=ALL-UNNAMED \
+--add-opens java.base/java.lang.reflect=ALL-UNNAMED \
+--add-opens java.base/java.nio=ALL-UNNAMED \
+--add-opens java.base/sun.nio.ch=ALL-UNNAMED \
+--add-opens java.base/java.io=ALL-UNNAMED"
+
+# NXF_OPTS for Nextflow's internal processes (must be exported)
+export NXF_OPTS="${JAVA_OPTS}"
 
 #------------------------------------------------------------------------------
 # RUN NEXTFLOW PIPELINE
