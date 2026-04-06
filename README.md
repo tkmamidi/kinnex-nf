@@ -307,12 +307,32 @@ nextflow run main.nf \
     --input samplesheet.tsv \
     ...
 
-# Custom work directory
+# Skip variant calling and isocall
 nextflow run main.nf \
     -profile slurm,conda \
-    -w /scratch/user/nf_work \
+    --skip_variant_calling \
+    --skip_isocall \
     --input samplesheet.tsv \
     ...
+```
+
+### Downstream Isocall Joint-Calling
+
+After the pipeline produces per-sample profiles, you can run isocall merge and call on selected samples:
+
+```bash
+# Merge selected sample profiles
+isocall merge \
+    --profiles results/isocall/profiles/SampleA/SampleA.profile.gz \
+                results/isocall/profiles/SampleB/SampleB.profile.gz \
+    --output merged.gz
+
+# Joint-call isoforms
+isocall call \
+    --merged-profile merged.gz \
+    --known-isoforms results/isocall/ref.isoforms.gz \
+    --reference /path/to/ref.fasta \
+    --output-prefix joint_calls
 ```
 
 ## Troubleshooting
@@ -357,3 +377,7 @@ This pipeline uses tools from [PacBio](https://www.pacb.com/):
 - [IsoSeq](https://github.com/PacificBiosciences/IsoSeq)
 - [pbmm2](https://github.com/PacificBiosciences/pbmm2)
 - [Pigeon](https://github.com/PacificBiosciences/pigeon)
+- [Isocall](https://github.com/PacificBiosciences/isocall)
+
+And from the community:
+- [Clair3-RNA](https://github.com/HKU-BAL/Clair3-RNA)
