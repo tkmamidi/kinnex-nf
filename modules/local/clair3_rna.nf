@@ -9,7 +9,8 @@ process CLAIR3_RNA {
 
     output:
     tuple val(meta), path("*_clair3_rna"), emit: output_dir
-    tuple val(meta), path("*_clair3_rna/output.vcf.gz"), emit: vcf
+    tuple val(meta), path("*_clair3_rna/*.vcf.gz"), emit: vcf
+    tuple val(meta), path("*_clair3_rna/*.vcf.gz.tbi"), emit: vcf_tbi, optional: true
     path "versions.yml", emit: versions
 
     when:
@@ -44,6 +45,20 @@ process CLAIR3_RNA {
         --threads ${task.cpus} \\
         --platform ${platform} \\
         ${args}
+
+    # Rename clair3 outputs to include sample prefix
+    mv "\${SCRATCH_DIR}/${prefix}_clair3_rna/output.vcf.gz" \\
+       "\${SCRATCH_DIR}/${prefix}_clair3_rna/${prefix}.vcf.gz"
+    if [ -f "\${SCRATCH_DIR}/${prefix}_clair3_rna/output.vcf.gz.tbi" ]; then
+        mv "\${SCRATCH_DIR}/${prefix}_clair3_rna/output.vcf.gz.tbi" \\
+           "\${SCRATCH_DIR}/${prefix}_clair3_rna/${prefix}.vcf.gz.tbi"
+    fi
+
+    # Remove intermediate VCFs (pileup and full_alignment) — final merged VCF is the renamed one
+    rm -f "\${SCRATCH_DIR}/${prefix}_clair3_rna/pileup.vcf.gz" \\
+          "\${SCRATCH_DIR}/${prefix}_clair3_rna/pileup.vcf.gz.tbi" \\
+          "\${SCRATCH_DIR}/${prefix}_clair3_rna/full_alignment.vcf.gz" \\
+          "\${SCRATCH_DIR}/${prefix}_clair3_rna/full_alignment.vcf.gz.tbi"
 
     # Move results back to Nextflow work dir
     mv "\${SCRATCH_DIR}/${prefix}_clair3_rna" "./"
