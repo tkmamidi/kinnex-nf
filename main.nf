@@ -8,6 +8,8 @@
     - Demultiplexing (lima)
     - IsoSeq processing (refine, cluster, align, collapse)
     - Isoform classification (pigeon)
+    - Variant calling (Clair3-RNA)
+    - Isoform profiling (isocall)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -23,6 +25,8 @@ include { SKERA_SPLIT } from './modules/local/skera_split'
 include { LIMA        } from './modules/local/lima'
 include { ISOSEQ      } from './subworkflows/isoseq'
 include { PIGEON      } from './subworkflows/pigeon'
+include { CLAIR3_RNA  } from './modules/local/clair3_rna'
+include { ISOCALL     } from './subworkflows/isocall'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,6 +55,12 @@ def validateParams() {
     }
     if (!genome_gtf && !params.skip_pigeon) {
         error "ERROR: Reference annotation GTF not found. Provide --ref_annotation or valid --genome key."
+    }
+    if (!genome_gtf && !params.skip_isocall) {
+        error "ERROR: Reference annotation GTF is required for isocall. Provide --ref_annotation or use --skip_isocall."
+    }
+    if (!params.isocall_binary && !params.skip_isocall) {
+        error "ERROR: 'isocall_binary' parameter is required for isocall profiling. Provide --isocall_binary or use --skip_isocall."
     }
 
     return [fasta: genome_fasta, gtf: genome_gtf]
@@ -215,6 +225,33 @@ workflow {
             ch_ref_genome_fai
         )
         ch_versions = ch_versions.mix(PIGEON.out.versions)
+    }
+
+    /*
+     * STEP 6: VARIANT CALLING (per sample)
+     */
+    if (!params.skip_variant_calling) {
+        ch_variant_input = ISOSEQ.out.mapped_bam
+            .join(ISOSEQ.out.mapped_bai)
+
+        CLAIR3_RNA(
+            ch_variant_input,
+            ch_ref_genome,
+            ch_ref_genome_fai
+        )
+        ch_versions = ch_versions.mix(CLAIR3_RNA.out.versions)
+    }
+
+    /*
+     * STEP 7: ISOCALL PROFILING (per sample)
+     */
+    if (!params.skip_isocall) {
+        ISOCALL(
+            ISOSEQ.out.mapped_bam,
+            ISOSEQ.out.mapped_bai,
+            ch_ref_annotation
+        )
+        ch_versions = ch_versions.mix(ISOCALL.out.versions)
     }
 
     /*
