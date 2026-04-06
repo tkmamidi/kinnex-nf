@@ -40,6 +40,9 @@ ISOSEQ_PRIMERS="/analysis/cloud_projects/research/cancer/scKinnex/reference/REF-
 REF_GENOME="/analysis/cloud_projects/research/cancer/IsoSeq/pigeon_reference/human_GRCh38_no_alt_analysis_set.fasta"
 REF_ANNOTATION="/analysis/cloud_projects/research/cancer/IsoSeq/pigeon_reference/gencode.v39.annotation.sorted.gtf"
 
+# Isocall binary (download from https://github.com/PacificBiosciences/isocall/releases)
+ISOCALL_BINARY="/analysis/cloud_projects/research/cancer/scKinnex/tools/isocall"
+
 #------------------------------------------------------------------------------
 # ENVIRONMENT SETUP
 #------------------------------------------------------------------------------
@@ -95,6 +98,7 @@ java ${JAVA_OPTS} -jar ${NEXTFLOW_JAR} run ${PIPELINE_DIR}/main.nf \
     --isoseq_primers ${ISOSEQ_PRIMERS} \
     --ref_genome ${REF_GENOME} \
     --ref_annotation ${REF_ANNOTATION} \
+    --isocall_binary ${ISOCALL_BINARY} \
     --tmpdir ${TMPDIR} \
     --outdir ${OUTDIR} \
     -resume
