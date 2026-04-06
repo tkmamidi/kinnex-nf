@@ -10,8 +10,8 @@ process CLAIR3_RNA {
     path ref_genome_fai
 
     output:
-    tuple val(meta), path("${prefix}_clair3_rna"), emit: output_dir
-    tuple val(meta), path("${prefix}_clair3_rna/output.vcf.gz"), emit: vcf
+    tuple val(meta), path("*_clair3_rna"), emit: output_dir
+    tuple val(meta), path("*_clair3_rna/output.vcf.gz"), emit: vcf
     path "versions.yml", emit: versions
 
     when:
@@ -20,7 +20,7 @@ process CLAIR3_RNA {
     script:
     def args = task.ext.args ?: params.clair3_rna_extra_args ?: ''
     def platform = params.clair3_rna_platform ?: 'hifi_mas_pbmm2'
-    prefix = task.ext.prefix ?: "${meta.sample}"
+    def prefix = task.ext.prefix ?: "${meta.sample}"
     """
     run_clair3_rna \\
         --bam_fn ${mapped_bam} \\

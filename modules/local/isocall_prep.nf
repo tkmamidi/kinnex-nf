@@ -16,14 +16,14 @@ process ISOCALL_PREP {
     def args = task.ext.args ?: ''
     def isocall_bin = params.isocall_binary
     """
-    ${isocall_bin} prep-isoforms \\
+    "${isocall_bin}" prep-isoforms \\
         --gtf ${ref_annotation} \\
         ${args} \\
         --output ref.isoforms.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        isocall: \$(${isocall_bin} --version 2>&1 | head -1 || echo 'unknown')
+        isocall: \$("${isocall_bin}" --version 2>&1 | head -1 || echo 'unknown')
     END_VERSIONS
     """
 }
