@@ -30,20 +30,13 @@ process CLAIR3_RNA {
     cp \$(readlink -f ${ref_genome})     \${SCRATCH_DIR}/ref.fasta
     cp \$(readlink -f ${ref_genome_fai}) \${SCRATCH_DIR}/ref.fasta.fai
 
-    # Capture version
-    CLAIR3_RNA_VERSION=\$(docker run --rm \
-        --userns=keep-id \
-        --security-opt label=disable \
-        hkubal/clair3-rna:latest \
-        /opt/bin/run_clair3_rna --version 2>&1 | head -1 || echo 'unknown')
-
     # Run with all mounts from local scratch
     docker run --rm \\
         --userns=keep-id \\
         --security-opt label=disable \\
         -w \${SCRATCH_DIR} \\
         -v \${SCRATCH_DIR}:\${SCRATCH_DIR} \\
-        hkubal/clair3-rna:latest \\
+        hkubal/clair3-rna:v0.2.2 \\
         /opt/bin/run_clair3_rna \\
         --bam_fn \${SCRATCH_DIR}/input.bam \\
         --ref_fn \${SCRATCH_DIR}/ref.fasta \\
@@ -57,7 +50,7 @@ process CLAIR3_RNA {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        clair3-rna: \${CLAIR3_RNA_VERSION}
+        clair3-rna: "0.2.2"
     END_VERSIONS
     """
 }
