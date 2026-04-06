@@ -16,8 +16,16 @@ process ISOCALL_PREP {
     def args = task.ext.args ?: ''
     def isocall_bin = params.isocall_binary
     """
+    # Gzip the GTF if not already compressed (isocall requires gzipped input)
+    if [[ "${ref_annotation}" == *.gz ]]; then
+        GTF_GZ="${ref_annotation}"
+    else
+        gzip -c ${ref_annotation} > ${ref_annotation}.gz
+        GTF_GZ="${ref_annotation}.gz"
+    fi
+
     "${isocall_bin}" prep-isoforms \\
-        --gtf ${ref_annotation} \\
+        --gtf \${GTF_GZ} \\
         ${args} \\
         --output ref.isoforms.gz
 
