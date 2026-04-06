@@ -41,13 +41,14 @@ process CLAIR3_RNA {
 
     docker run --rm \\
         --user "\$(id -u):\$(id -g)" \\
+        -w \${PWD} \\
         -v \${PWD}:\${PWD} \\
         \${MOUNT_ARGS} \\
         hkubal/clair3-rna:latest \\
         /opt/bin/run_clair3_rna \\
         --bam_fn \${BAM_ABS} \\
         --ref_fn \${REF_ABS} \\
-        --output_dir "\${PWD}/${prefix}_clair3_rna" \\
+        --output_dir "${prefix}_clair3_rna" \\
         --threads ${task.cpus} \\
         --platform ${platform} \\
         ${args}
