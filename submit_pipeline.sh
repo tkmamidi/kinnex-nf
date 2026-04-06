@@ -41,7 +41,7 @@ REF_GENOME="/analysis/cloud_projects/research/cancer/IsoSeq/pigeon_reference/hum
 REF_ANNOTATION="/analysis/cloud_projects/research/cancer/IsoSeq/pigeon_reference/gencode.v39.annotation.sorted.gtf"
 
 # Isocall binary (download from https://github.com/PacificBiosciences/isocall/releases)
-ISOCALL_BINARY="/analysis/cloud_projects/research/cancer/scKinnex/tools/isocall"
+ISOCALL_BINARY="/analysis/cloud_projects/research/cancer/isocall_v0_15_0"
 
 #------------------------------------------------------------------------------
 # ENVIRONMENT SETUP
