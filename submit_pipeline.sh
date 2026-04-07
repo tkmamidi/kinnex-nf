@@ -3,8 +3,8 @@
 #SBATCH --ntasks=1
 #SBATCH --mem=16G
 #SBATCH --time=72:00:00
-#SBATCH --output=kinnex_nf_%j.out
-#SBATCH --error=kinnex_nf_%j.err
+#SBATCH --output=logs/kinnex_nf_%j.out
+#SBATCH --error=logs/kinnex_nf_%j.err
 #SBATCH --job-name=Kinnex_nf
 
 set -e
@@ -90,7 +90,7 @@ echo "Input: ${INPUT_TSV}"
 echo "Output: ${OUTDIR}"
 echo "Work dir: ${WORK_DIR}"
 
-java ${JAVA_OPTS} -jar ${NEXTFLOW_JAR} run ${PIPELINE_DIR}/main.nf \
+java ${JAVA_OPTS} -jar ${NEXTFLOW_JAR} -log logs/.nextflow.log run ${PIPELINE_DIR}/main.nf \
     -profile slurm,conda \
     -w ${WORK_DIR} \
     --input ${INPUT_TSV} \
