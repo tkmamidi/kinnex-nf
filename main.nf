@@ -9,6 +9,7 @@
     - IsoSeq processing (refine, cluster, align, collapse)
     - Isoform classification (pigeon)
     - Variant calling (Clair3-RNA)
+    - Fusion gene detection (pbfusion)
     - Isoform profiling (isocall)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -26,6 +27,7 @@ include { LIMA        } from './modules/local/lima'
 include { ISOSEQ      } from './subworkflows/isoseq'
 include { PIGEON      } from './subworkflows/pigeon'
 include { CLAIR3_RNA  } from './modules/local/clair3_rna'
+include { PBFUSION    } from './modules/local/pbfusion'
 include { ISOCALL     } from './subworkflows/isocall'
 
 /*
@@ -55,6 +57,9 @@ def validateParams() {
     }
     if (!genome_gtf && !params.skip_pigeon) {
         error "ERROR: Reference annotation GTF not found. Provide --ref_annotation or valid --genome key."
+    }
+    if (!genome_gtf && !params.skip_fusion_calling) {
+        error "ERROR: Reference annotation GTF is required for pbfusion. Provide --ref_annotation or use --skip_fusion_calling."
     }
     if (!genome_gtf && !params.skip_isocall) {
         error "ERROR: Reference annotation GTF is required for isocall. Provide --ref_annotation or use --skip_isocall."
@@ -227,15 +232,16 @@ workflow {
         ch_versions = ch_versions.mix(PIGEON.out.versions)
     }
 
+    // Shared channel: mapped BAM + BAI joined by sample meta
+    ch_mapped_bam_bai = ISOSEQ.out.mapped_bam
+        .join(ISOSEQ.out.mapped_bai)
+
     /*
      * STEP 6: VARIANT CALLING (per sample)
      */
     if (!params.skip_variant_calling) {
-        ch_variant_input = ISOSEQ.out.mapped_bam
-            .join(ISOSEQ.out.mapped_bai)
-
         CLAIR3_RNA(
-            ch_variant_input,
+            ch_mapped_bam_bai,
             ch_ref_genome,
             ch_ref_genome_fai
         )
@@ -243,7 +249,18 @@ workflow {
     }
 
     /*
-     * STEP 7: ISOCALL PROFILING (per sample)
+     * STEP 7: FUSION GENE DETECTION (per sample)
+     */
+    if (!params.skip_fusion_calling) {
+        PBFUSION(
+            ch_mapped_bam_bai,
+            ch_ref_annotation
+        )
+        ch_versions = ch_versions.mix(PBFUSION.out.versions)
+    }
+
+    /*
+     * STEP 8: ISOCALL PROFILING (per sample)
      */
     if (!params.skip_isocall) {
         ISOCALL(
