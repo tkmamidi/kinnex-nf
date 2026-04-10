@@ -15,6 +15,8 @@
 #   SOURCE/pigeon/SAMPLE/               -> DEST/SAMPLE/pigeon/
 #   SOURCE/isocall/profiles/SAMPLE/     -> DEST/SAMPLE/isocall/
 #   SOURCE/variant_calling/SAMPLE/      -> DEST/SAMPLE/variant_calling/
+#   SOURCE/fusion_calling/SAMPLE/       -> DEST/SAMPLE/fusion_calling/
+#   SOURCE/pipeline_info/versions.yml   -> DEST/SAMPLE/pipeline_info/
 #
 # Mapped BAMs/BAIs are also copied flat into BAM_DEST.
 #
@@ -48,6 +50,8 @@ ISOSEQ_DIR="${SOURCE}/isoseq"
 PIGEON_DIR="${SOURCE}/pigeon"
 ISOCALL_DIR="${SOURCE}/isocall/profiles"
 VARIANT_DIR="${SOURCE}/variant_calling"
+FUSION_DIR="${SOURCE}/fusion_calling"
+VERSIONS_FILE="${SOURCE}/pipeline_info/versions.yml"
 
 if [[ ! -d "$ISOSEQ_DIR" ]]; then
     echo "ERROR: isoseq directory not found: $ISOSEQ_DIR"
@@ -124,6 +128,23 @@ for SAMPLE in "${SAMPLES[@]}"; do
         echo "  [OK] variant_calling"
     else
         echo "  [SKIP] variant_calling (not found)"
+    fi
+
+    # --- fusion_calling ---
+    SAMPLE_FUSION="${FUSION_DIR}/${SAMPLE}"
+    if [[ -d "$SAMPLE_FUSION" ]]; then
+        mkdir -p "${SAMPLE_DEST}/fusion_calling"
+        cp -r "${SAMPLE_FUSION}/." "${SAMPLE_DEST}/fusion_calling/"
+        echo "  [OK] fusion_calling"
+    else
+        echo "  [SKIP] fusion_calling (not found)"
+    fi
+
+    # --- pipeline_info (versions.yml) ---
+    if [[ -f "$VERSIONS_FILE" ]]; then
+        mkdir -p "${SAMPLE_DEST}/pipeline_info"
+        cp "$VERSIONS_FILE" "${SAMPLE_DEST}/pipeline_info/"
+        echo "  [OK] pipeline_info/versions.yml"
     fi
 
 done
