@@ -10,6 +10,7 @@ dependencies:
   - pbmm2
   - pbpigeon
   - pbskera
+  - pbfusion
   - pbtk
   - samtools
   - minimap2
