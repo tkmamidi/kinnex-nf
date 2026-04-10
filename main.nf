@@ -8,6 +8,7 @@
     - Demultiplexing (lima)
     - IsoSeq processing (refine, cluster, align, collapse)
     - Isoform classification (pigeon)
+    - Fusion gene detection (pbfusion)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -23,6 +24,7 @@ include { SKERA_SPLIT } from './modules/local/skera_split'
 include { LIMA        } from './modules/local/lima'
 include { ISOSEQ      } from './subworkflows/isoseq'
 include { PIGEON      } from './subworkflows/pigeon'
+include { PBFUSION    } from './modules/local/pbfusion'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,6 +53,9 @@ def validateParams() {
     }
     if (!genome_gtf && !params.skip_pigeon) {
         error "ERROR: Reference annotation GTF not found. Provide --ref_annotation or valid --genome key."
+    }
+    if (!genome_gtf && !params.skip_fusion_calling) {
+        error "ERROR: Reference annotation GTF is required for pbfusion. Provide --ref_annotation or use --skip_fusion_calling."
     }
 
     return [fasta: genome_fasta, gtf: genome_gtf]
@@ -215,6 +220,20 @@ workflow {
             ch_ref_genome_fai
         )
         ch_versions = ch_versions.mix(PIGEON.out.versions)
+    }
+
+    /*
+     * STEP 6: FUSION GENE DETECTION (per sample)
+     */
+    if (!params.skip_fusion_calling) {
+        ch_mapped_bam_bai = ISOSEQ.out.mapped_bam
+            .join(ISOSEQ.out.mapped_bai)
+
+        PBFUSION(
+            ch_mapped_bam_bai,
+            ch_ref_annotation
+        )
+        ch_versions = ch_versions.mix(PBFUSION.out.versions)
     }
 
     /*
