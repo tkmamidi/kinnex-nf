@@ -26,7 +26,7 @@ process PBFUSION {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        pbfusion: \$(pbfusion discover --version 2>&1 | sed 's/pbfusion-discover //')
+        pbfusion: \$(pbfusion --version 2>&1 | sed 's/pbfusion //')
     END_VERSIONS
     """
 }
