@@ -16,8 +16,9 @@ process PBFUSION {
     script:
     def args = task.ext.args ?: params.pbfusion_extra_args ?: ''
     def prefix = task.ext.prefix ?: "${meta.sample}"
+    def pbfusion_bin = params.pbfusion_binary ?: 'pbfusion'
     """
-    pbfusion discover \\
+    ${pbfusion_bin} discover \\
         --gtf ${ref_annotation} \\
         --output-prefix ${prefix} \\
         --threads ${task.cpus} \\
@@ -26,7 +27,7 @@ process PBFUSION {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        pbfusion: \$(pbfusion --version 2>&1 | sed 's/pbfusion //')
+        pbfusion: \$(${pbfusion_bin} --version 2>&1 | sed 's/pbfusion //')
     END_VERSIONS
     """
 }

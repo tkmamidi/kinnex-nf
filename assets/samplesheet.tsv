@@ -1,3 +1,2 @@
-KNX_FL_Pool015	/pbdata/r84052_20251126_210319/1_B01/hifi_reads/m84052_251126_231407_s2.hifi_reads.bcM0001.bam	/cluster/home/tmamidi/tarun/kinnex_try/kinnex-nf/assets/pool015.csv
-KNX_FL_Pool016	/pbdata/r84052_20251126_210319/1_C01/hifi_reads/m84052_251127_011714_s3.hifi_reads.bcM0002.bam	/cluster/home/tmamidi/tarun/kinnex_try/kinnex-nf/assets/pool016.csv
-KNX_FL_Pool017	/pbdata/r84052_20251126_210319/1_D01/hifi_reads/m84052_251127_032016_s4.hifi_reads.bcM0003.bam	/cluster/home/tmamidi/tarun/kinnex_try/kinnex-nf/assets/pool017.csv
+KNX_FL_Pool011	/cluster/home/tmamidi/tarun/kinnex_try/for_Tarun/m84052_250926_020407_s3.hifi_reads.bcM0001.bam	/cluster/home/tmamidi/tarun/kinnex_try/kinnex-nf/assets/barcodes.csv
+KNX_FL_Pool015	/pbdata/r84052_20251126_210319/1_B01/hifi_reads/m84052_251126_231407_s2.hifi_reads.bcM0001.bam/cluster/home/tmamidi/tarun/kinnex_try/kinnex-nf/assets/pool015.csv

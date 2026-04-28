@@ -7,3 +7,5 @@
 nextflow_work
 results
 .claude
+bin
+*.gtf

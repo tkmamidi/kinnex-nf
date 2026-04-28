@@ -43,6 +43,9 @@ REF_ANNOTATION="/analysis/cloud_projects/research/cancer/IsoSeq/pigeon_reference
 # Isocall binary (download from https://github.com/PacificBiosciences/isocall/releases)
 ISOCALL_BINARY="/analysis/cloud_projects/research/cancer/isocall_v0_15_0"
 
+# pbfusion binary
+PBFUSION_BINARY="/analysis/cloud_projects/research/cancer/pbfusion_v0_5_2"
+
 #------------------------------------------------------------------------------
 # ENVIRONMENT SETUP
 #------------------------------------------------------------------------------
@@ -99,6 +102,7 @@ java ${JAVA_OPTS} -jar ${NEXTFLOW_JAR} -log logs/.nextflow.log run ${PIPELINE_DI
     --ref_genome ${REF_GENOME} \
     --ref_annotation ${REF_ANNOTATION} \
     --isocall_binary ${ISOCALL_BINARY} \
+    --pbfusion_binary ${PBFUSION_BINARY} \
     --tmpdir ${TMPDIR} \
     --outdir ${OUTDIR} \
     -resume
