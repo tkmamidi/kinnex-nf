@@ -21,6 +21,7 @@ process PBFUSION {
     ${pbfusion_bin} discover \\
         --gtf ${ref_annotation} \\
         --output-prefix ${prefix} \\
+        --threads ${task.cpus} \\
         ${args} \\
         ${mapped_bam}
 
