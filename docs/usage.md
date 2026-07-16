@@ -22,7 +22,6 @@ nextflow run main.nf \
     --isoseq_primers /path/to/IsoSeq_v2_primers_12.fasta \
     --pbfusion_binary /path/to/pbfusion \
     --isocall_binary /path/to/isocall \
-    --conda_env /path/to/conda/envs/scKinnex \
     --outdir results
 ```
 
@@ -72,7 +71,6 @@ bc1003--bc1003,SampleC
 | `--input` | Path to samplesheet TSV |
 | `--mas8_primers` | Path to MAS8 primers FASTA (for segmentation) |
 | `--isoseq_primers` | Path to IsoSeq primers FASTA |
-| `--conda_env` | Path to existing conda environment |
 
 ### Reference Files
 
@@ -132,7 +130,6 @@ bc1003--bc1003,SampleC
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `--conda_env` | - | Path to existing conda environment |
 | `--tmpdir` | - | Custom TMPDIR path |
 
 ## Profiles
@@ -233,7 +230,7 @@ results/
 
 ### Common Issues
 
-1. **Missing conda environment**: Ensure `--conda_env` points to a valid conda environment with all required tools (skera, lima, isoseq, pbmm2, pigeon).
+1. **Missing conda environment**: With `-profile conda`, Nextflow builds the environment from `assets/scKinnex_simple.yml` (containing skera, lima, isoseq, pbmm2, pigeon). Ensure conda is available and the YAML resolves.
 
 2. **Reference files not found**: Check that `--ref_genome` and `--ref_annotation` paths are correct, or that the `--genome` key exists in `conf/genomes.config`.
 

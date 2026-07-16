@@ -16,8 +16,8 @@ echo "HOSTNAME: ${HOSTNAME}"
 # CONFIGURATION - MODIFY THESE PATHS FOR YOUR ENVIRONMENT
 #------------------------------------------------------------------------------
 
-# >>> SET THIS TO YOUR PROJECT DIRECTORY <<<
-PROJECT_DIR="/cluster/home/tmamidi/tarun/kinnex_try/kinnex-nf"
+# >>> SET THIS TO YOUR PROJECT DIRECTORY (where you cloned kinnex-nf) <<<
+PROJECT_DIR="/path/to/kinnex-nf"
 
 # Input samplesheet (TSV: POOL_NAME, HIFI_BAM, LIMA_CSV)
 INPUT_TSV="${PROJECT_DIR}/assets/samplesheet.tsv"

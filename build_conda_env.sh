@@ -15,8 +15,13 @@ echo "HOSTNAME: ${HOSTNAME}"
 # Initialize conda
 source /software/python/conda3/etc/profile.d/conda.sh
 
-ENV_PREFIX="/cluster/home/tmamidi/.nextflow/conda/scKinnex-77149910c7f37373d446d677d8fb70d5"
-ENV_YML="/cluster/home/tmamidi/tarun/kinnex_try/kinnex-nf/assets/scKinnex_simple.yml"
+# Set to where you cloned kinnex-nf
+PROJECT_DIR="/path/to/kinnex-nf"
+
+# Nextflow-computed conda cache prefix (hash matches assets/scKinnex_simple.yml;
+# must match what the `conda` profile resolves to for the pre-build to be reused)
+ENV_PREFIX="${HOME}/.nextflow/conda/scKinnex-77149910c7f37373d446d677d8fb70d5"
+ENV_YML="${PROJECT_DIR}/assets/scKinnex_simple.yml"
 
 if conda env list | grep -q "${ENV_PREFIX}"; then
     echo "Conda environment already exists at: ${ENV_PREFIX}"

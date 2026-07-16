@@ -33,7 +33,8 @@ set -euo pipefail
 #------------------------------------------------------------------------------
 # CONFIGURATION - adjust paths here
 #------------------------------------------------------------------------------
-PROJECT_DIR="/cluster/home/tmamidi/tarun/kinnex_try/kinnex-nf"
+PROJECT_DIR="/path/to/kinnex-nf"   # <-- set to where you cloned kinnex-nf
+
 DEST="/analysis/cloud_projects/research/bulkrna-kinnex-nf-results"
 BAM_DEST="/analysis/cloud_projects/research/FL_Kinnex_mapped_flnc"
 SOURCE="results"  # <-- set this to the source directory relative to project dir or absolute path
