@@ -63,31 +63,32 @@ This pipeline processes PacBio Kinnex (MAS-Seq) long-read sequencing data for is
     │                                  │ (saturation)   │  │
     │                                  └────────────────┘  │
     └──────────────────────────────────────────────────────┘
-           │
-           ├──────────────────────────────┐
-           ▼                              ▼
-    ┌──────────────────┐    ┌──────────────────────────────┐
-    │   CLAIR3-RNA     │    │      ISOCALL SUBWORKFLOW     │
-    │(variant calling) │    │  ┌────────────┐  ┌────────┐  │
-    │   (per sample)   │    │  │ PREP       │  │PROFILE │  │
-    └──────────────────┘    │  │(ref GTF)   │  │(per    │  │
-                            │  │            │  │sample) │  │
-                            │  └────────────┘  └────────┘  │
-                            └──────────────────────────────┘
-           │                              │
-           ▼                              ▼
-    ┌──────────────┐    ┌──────────────────────────────────┐
-    │  VCF files   │    │  Per-sample profiles for         │
-    │ (per sample) │    │  downstream merge & joint-call   │
-    └──────────────┘    └──────────────────────────────────┘
+           │  (mapped BAM per sample, branches run in parallel)
+           ├────────────────┬────────────────┐
+           ▼                ▼                ▼
+    ┌──────────────┐ ┌──────────────┐ ┌──────────────────────────┐
+    │  CLAIR3-RNA  │ │   PBFUSION   │ │    ISOCALL SUBWORKFLOW   │
+    │  (variant    │ │ (fusion gene │ │  ┌──────────┐ ┌────────┐ │
+    │   calling)   │ │  detection)  │ │  │ PREP     │ │PROFILE │ │
+    │ (per sample) │ │ (per sample) │ │  │(ref GTF) │ │(per    │ │
+    └──────┬───────┘ └──────┬───────┘ │  └──────────┘ │sample) │ │
+           │                │         │               └───┬────┘ │
+           ▼                ▼         └───────────────────┼──────┘
+    ┌──────────────┐ ┌──────────────┐                     ▼
+    │  VCF files   │ │  Fusion BED  │        ┌──────────────────────┐
+    │ (per sample) │ │ (breakpoints)│        │  Per-sample profiles │
+    └──────────────┘ └──────────────┘        │  for downstream merge│
+                                             │  & joint-call        │
+                                             └──────────────────────┘
 ```
 
 ## Features
 
-- **Modular design** - Skip segmentation, pigeon, variant calling, or isocall as needed
+- **Modular design** - Skip segmentation, pigeon, variant calling, fusion calling, or isocall as needed
 - **Multi-sample support** - Process multiple pools and samples in parallel
 - **Flexible execution** - Run locally, on SLURM clusters, or in containers
 - **Variant calling** - SNP/indel calling from IsoSeq reads using Clair3-RNA
+- **Fusion gene detection** - Per-sample fusion breakpoint calling using pbfusion
 - **Isoform profiling** - Per-sample isoform profiles via isocall for downstream joint-calling
 - **Comprehensive outputs** - Isoform classifications, VCFs, QC reports, and execution metrics
 - **Resume capability** - Restart from any point using Nextflow's `-resume` feature
@@ -110,6 +111,7 @@ This pipeline processes PacBio Kinnex (MAS-Seq) long-read sequencing data for is
 ### Additional Tools
 
 - [Clair3-RNA](https://github.com/HKU-BAL/Clair3-RNA) - RNA variant caller (via Singularity/Docker container `hkubal/clair3-rna:latest`)
+- [pbfusion](https://github.com/PacificBiosciences/pbfusion) - Fusion gene detection from aligned IsoSeq reads (pre-downloaded binary)
 - [isocall](https://github.com/PacificBiosciences/isocall) - Joint isoform calling (pre-downloaded binary)
 
 ### Reference Files
@@ -118,6 +120,7 @@ This pipeline processes PacBio Kinnex (MAS-Seq) long-read sequencing data for is
 - Annotation GTF (+ `.pgi` pigeon index)
 - MAS8 primers FASTA
 - IsoSeq primers FASTA
+- pbfusion binary (download from [GitHub releases](https://github.com/PacificBiosciences/pbfusion/releases))
 - Isocall binary (download from [GitHub releases](https://github.com/PacificBiosciences/isocall/releases))
 
 ## Quick Start
@@ -129,6 +132,7 @@ nextflow run main.nf \
     --input samplesheet.tsv \
     --mas8_primers /path/to/mas8_primers.fasta \
     --isoseq_primers /path/to/IsoSeq_v2_primers_12.fasta \
+    --pbfusion_binary /path/to/pbfusion \
     --isocall_binary /path/to/isocall \
     --outdir results
 
@@ -182,6 +186,7 @@ bc1003--bc1003,SampleC
 | `--genome` | `GRCh38` | Genome key (see `conf/genomes.config`) |
 | `--ref_genome` | - | Override: custom reference FASTA path |
 | `--ref_annotation` | - | Override: custom annotation GTF path |
+| `--pbfusion_binary` | - | Path to pre-downloaded pbfusion binary |
 | `--isocall_binary` | - | Path to pre-downloaded isocall binary |
 
 ### Output
@@ -198,6 +203,7 @@ bc1003--bc1003,SampleC
 | `--skip_segmentation` | `false` | Skip skera split (if BAMs already segmented) |
 | `--skip_pigeon` | `false` | Stop after isoseq collapse |
 | `--skip_variant_calling` | `false` | Skip Clair3-RNA variant calling |
+| `--skip_fusion_calling` | `false` | Skip pbfusion fusion gene detection |
 | `--skip_isocall` | `false` | Skip isocall isoform profiling |
 
 ### Resource Limits
@@ -259,6 +265,9 @@ results/
 │       └── {sample}_clair3_rna/
 │           ├── output.vcf.gz
 │           └── output.vcf.gz.tbi
+├── fusion_calling/
+│   └── {sample}/
+│       └── {sample}.breakpoints.groups.bed
 ├── isocall/
 │   ├── ref.isoforms.gz
 │   └── profiles/
@@ -307,10 +316,11 @@ nextflow run main.nf \
     --input samplesheet.tsv \
     ...
 
-# Skip variant calling and isocall
+# Skip variant calling, fusion calling, and isocall
 nextflow run main.nf \
     -profile slurm,conda \
     --skip_variant_calling \
+    --skip_fusion_calling \
     --skip_isocall \
     --input samplesheet.tsv \
     ...
@@ -377,6 +387,7 @@ This pipeline uses tools from [PacBio](https://www.pacb.com/):
 - [IsoSeq](https://github.com/PacificBiosciences/IsoSeq)
 - [pbmm2](https://github.com/PacificBiosciences/pbmm2)
 - [Pigeon](https://github.com/PacificBiosciences/pigeon)
+- [pbfusion](https://github.com/PacificBiosciences/pbfusion)
 - [Isocall](https://github.com/PacificBiosciences/isocall)
 
 And from the community:

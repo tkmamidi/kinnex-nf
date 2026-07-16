@@ -9,7 +9,8 @@ This Nextflow pipeline processes PacBio Kinnex/MAS-Seq data through the complete
 3. **IsoSeq Processing** - Refine, cluster, align, and collapse isoforms
 4. **Classification** - Isoform classification and reporting using `pigeon`
 5. **Variant Calling** - SNP/indel calling from IsoSeq reads using `Clair3-RNA`
-6. **Isoform Profiling** - Per-sample isoform profiles using `isocall` for downstream joint-calling
+6. **Fusion Gene Detection** - Per-sample fusion breakpoint calling using `pbfusion`
+7. **Isoform Profiling** - Per-sample isoform profiles using `isocall` for downstream joint-calling
 
 ## Quick Start
 
@@ -19,6 +20,7 @@ nextflow run main.nf \
     --input samplesheet.tsv \
     --mas8_primers /path/to/mas8_primers.fasta \
     --isoseq_primers /path/to/IsoSeq_v2_primers_12.fasta \
+    --pbfusion_binary /path/to/pbfusion \
     --isocall_binary /path/to/isocall \
     --conda_env /path/to/conda/envs/scKinnex \
     --outdir results
@@ -79,6 +81,7 @@ bc1003--bc1003,SampleC
 | `--genome` | `GRCh38` | Genome key for preset references |
 | `--ref_genome` | - | Override: path to reference genome FASTA |
 | `--ref_annotation` | - | Override: path to annotation GTF |
+| `--pbfusion_binary` | - | Path to pre-downloaded pbfusion binary (falls back to `pbfusion` on `PATH`) |
 | `--isocall_binary` | - | Path to pre-downloaded isocall binary (required unless `--skip_isocall`) |
 
 ### Output Options
@@ -95,6 +98,7 @@ bc1003--bc1003,SampleC
 | `--skip_segmentation` | `false` | Skip segmentation (if BAMs already segmented) |
 | `--skip_pigeon` | `false` | Stop after isoseq collapse |
 | `--skip_variant_calling` | `false` | Skip Clair3-RNA variant calling |
+| `--skip_fusion_calling` | `false` | Skip pbfusion fusion gene detection |
 | `--skip_isocall` | `false` | Skip isocall isoform profiling |
 
 ### Tool-Specific Options
@@ -113,6 +117,7 @@ bc1003--bc1003,SampleC
 | `--pigeon_report_extra_args` | `''` | Extra arguments for pigeon report |
 | `--clair3_rna_extra_args` | `''` | Extra arguments for Clair3-RNA |
 | `--clair3_rna_platform` | `'hifi_mas_pbmm2'` | Clair3-RNA platform (see [models](https://github.com/HKU-BAL/Clair3-RNA)) |
+| `--pbfusion_extra_args` | `'--min-coverage 5'` | Extra arguments for pbfusion discover |
 | `--isocall_extra_args` | `''` | Extra arguments for isocall profile |
 
 ### Resource Limits
@@ -167,6 +172,9 @@ nextflow run main.nf -profile slurm,conda --skip_pigeon --input samplesheet.tsv 
 # Skip variant calling only
 nextflow run main.nf -profile slurm,conda --skip_variant_calling --input samplesheet.tsv ...
 
+# Skip fusion gene detection only
+nextflow run main.nf -profile slurm,conda --skip_fusion_calling --input samplesheet.tsv ...
+
 # Skip isocall profiling only
 nextflow run main.nf -profile slurm,conda --skip_isocall --input samplesheet.tsv ...
 ```
@@ -206,6 +214,9 @@ results/
 │       └── {sample}_clair3_rna/
 │           ├── output.vcf.gz
 │           └── output.vcf.gz.tbi
+├── fusion_calling/
+│   └── {sample}/
+│       └── {sample}.breakpoints.groups.bed
 ├── isocall/
 │   ├── ref.isoforms.gz
 │   └── profiles/
@@ -269,6 +280,22 @@ Available platforms for `--clair3_rna_platform`:
 | `hifi_mas_minimap2` | Kinnex/MAS-Seq aligned with minimap2 |
 | `hifi_sequel2_pbmm2` | Sequel II aligned with pbmm2 |
 | `hifi_sequel2_minimap2` | Sequel II aligned with minimap2 |
+
+## Setting Up pbfusion
+
+pbfusion detects fusion genes from the aligned (mapped) IsoSeq reads and requires the reference annotation GTF (`--ref_annotation` or a valid `--genome` key). Install it one of two ways ([project README](https://github.com/PacificBiosciences/pbfusion)):
+
+```bash
+# Option A: bioconda (recommended by the pbfusion project)
+conda install -c bioconda pbfusion
+
+# Option B: pre-compiled binary from the GitHub releases page
+#   https://github.com/PacificBiosciences/pbfusion/releases
+#   Download the binary asset for the latest release, then:
+chmod +x pbfusion
+```
+
+Then provide the binary path via `--pbfusion_binary /path/to/pbfusion`. If omitted, the pipeline falls back to `pbfusion` on the `PATH` (e.g. when installed into the conda environment). Per-sample fusion breakpoints are written to `fusion_calling/{sample}/{sample}.breakpoints.groups.bed`. Use `--skip_fusion_calling` to disable this step.
 
 ## Setting Up Isocall
 
