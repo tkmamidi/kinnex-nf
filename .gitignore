@@ -6,3 +6,7 @@
 .nextflow
 nextflow_work
 results
+.claude
+bin
+*.gtf
+assets/samplesheet.tsv

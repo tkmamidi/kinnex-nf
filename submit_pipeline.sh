@@ -3,8 +3,8 @@
 #SBATCH --ntasks=1
 #SBATCH --mem=16G
 #SBATCH --time=72:00:00
-#SBATCH --output=kinnex_nf_%j.out
-#SBATCH --error=kinnex_nf_%j.err
+#SBATCH --output=logs/kinnex_nf_%j.out
+#SBATCH --error=logs/kinnex_nf_%j.err
 #SBATCH --job-name=Kinnex_nf
 
 set -e
@@ -39,6 +39,12 @@ MAS8_PRIMERS="/analysis/cloud_projects/research/cancer/scKinnex/reference/MAS-Se
 ISOSEQ_PRIMERS="/analysis/cloud_projects/research/cancer/scKinnex/reference/REF-primers/IsoSeq_v2_primers_12.fasta"
 REF_GENOME="/analysis/cloud_projects/research/cancer/IsoSeq/pigeon_reference/human_GRCh38_no_alt_analysis_set.fasta"
 REF_ANNOTATION="/analysis/cloud_projects/research/cancer/IsoSeq/pigeon_reference/gencode.v39.annotation.sorted.gtf"
+
+# Isocall binary (download from https://github.com/PacificBiosciences/isocall/releases)
+ISOCALL_BINARY="/analysis/cloud_projects/research/cancer/isocall_v0_15_0"
+
+# pbfusion binary
+PBFUSION_BINARY="/analysis/cloud_projects/research/cancer/pbfusion_v0_5_2"
 
 #------------------------------------------------------------------------------
 # ENVIRONMENT SETUP
@@ -87,7 +93,7 @@ echo "Input: ${INPUT_TSV}"
 echo "Output: ${OUTDIR}"
 echo "Work dir: ${WORK_DIR}"
 
-java ${JAVA_OPTS} -jar ${NEXTFLOW_JAR} run ${PIPELINE_DIR}/main.nf \
+java ${JAVA_OPTS} -jar ${NEXTFLOW_JAR} -log logs/.nextflow.log run ${PIPELINE_DIR}/main.nf \
     -profile slurm,conda \
     -w ${WORK_DIR} \
     --input ${INPUT_TSV} \
@@ -95,6 +101,8 @@ java ${JAVA_OPTS} -jar ${NEXTFLOW_JAR} run ${PIPELINE_DIR}/main.nf \
     --isoseq_primers ${ISOSEQ_PRIMERS} \
     --ref_genome ${REF_GENOME} \
     --ref_annotation ${REF_ANNOTATION} \
+    --isocall_binary ${ISOCALL_BINARY} \
+    --pbfusion_binary ${PBFUSION_BINARY} \
     --tmpdir ${TMPDIR} \
     --outdir ${OUTDIR} \
     -resume

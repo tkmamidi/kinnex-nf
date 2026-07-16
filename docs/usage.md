@@ -8,6 +8,8 @@ This Nextflow pipeline processes PacBio Kinnex/MAS-Seq data through the complete
 2. **Demultiplexing** - Primer removal and barcode demultiplexing using `lima`
 3. **IsoSeq Processing** - Refine, cluster, align, and collapse isoforms
 4. **Classification** - Isoform classification and reporting using `pigeon`
+5. **Variant Calling** - SNP/indel calling from IsoSeq reads using `Clair3-RNA`
+6. **Isoform Profiling** - Per-sample isoform profiles using `isocall` for downstream joint-calling
 
 ## Quick Start
 
@@ -17,6 +19,7 @@ nextflow run main.nf \
     --input samplesheet.tsv \
     --mas8_primers /path/to/mas8_primers.fasta \
     --isoseq_primers /path/to/IsoSeq_v2_primers_12.fasta \
+    --isocall_binary /path/to/isocall \
     --conda_env /path/to/conda/envs/scKinnex \
     --outdir results
 ```
@@ -76,6 +79,7 @@ bc1003--bc1003,SampleC
 | `--genome` | `GRCh38` | Genome key for preset references |
 | `--ref_genome` | - | Override: path to reference genome FASTA |
 | `--ref_annotation` | - | Override: path to annotation GTF |
+| `--isocall_binary` | - | Path to pre-downloaded isocall binary (required unless `--skip_isocall`) |
 
 ### Output Options
 
@@ -90,6 +94,8 @@ bc1003--bc1003,SampleC
 |-----------|---------|-------------|
 | `--skip_segmentation` | `false` | Skip segmentation (if BAMs already segmented) |
 | `--skip_pigeon` | `false` | Stop after isoseq collapse |
+| `--skip_variant_calling` | `false` | Skip Clair3-RNA variant calling |
+| `--skip_isocall` | `false` | Skip isocall isoform profiling |
 
 ### Tool-Specific Options
 
@@ -105,6 +111,9 @@ bc1003--bc1003,SampleC
 | `--pigeon_classify_extra_args` | `''` | Extra arguments for pigeon classify |
 | `--pigeon_filter_extra_args` | `''` | Extra arguments for pigeon filter |
 | `--pigeon_report_extra_args` | `''` | Extra arguments for pigeon report |
+| `--clair3_rna_extra_args` | `''` | Extra arguments for Clair3-RNA |
+| `--clair3_rna_platform` | `'hifi_mas_pbmm2'` | Clair3-RNA platform (see [models](https://github.com/HKU-BAL/Clair3-RNA)) |
+| `--isocall_extra_args` | `''` | Extra arguments for isocall profile |
 
 ### Resource Limits
 
@@ -154,6 +163,12 @@ nextflow run main.nf -profile slurm,conda --skip_segmentation --input sampleshee
 
 # Stop after isoseq (no pigeon)
 nextflow run main.nf -profile slurm,conda --skip_pigeon --input samplesheet.tsv ...
+
+# Skip variant calling only
+nextflow run main.nf -profile slurm,conda --skip_variant_calling --input samplesheet.tsv ...
+
+# Skip isocall profiling only
+nextflow run main.nf -profile slurm,conda --skip_isocall --input samplesheet.tsv ...
 ```
 
 ## Output Structure
@@ -186,6 +201,16 @@ results/
 │       ├── {sample}_classification.filtered_lite_classification.txt
 │       ├── {sample}_junctions.txt
 │       └── {sample}.report.json
+├── variant_calling/
+│   └── {sample}/
+│       └── {sample}_clair3_rna/
+│           ├── output.vcf.gz
+│           └── output.vcf.gz.tbi
+├── isocall/
+│   ├── ref.isoforms.gz
+│   └── profiles/
+│       └── {sample}/
+│           └── {sample}.profile.gz
 └── pipeline_info/
     ├── execution_timeline.html
     ├── execution_report.html
@@ -210,6 +235,52 @@ results/
 ```bash
 nextflow run main.nf -resume ...
 ```
+
+## Downstream Isocall Joint-Calling
+
+The pipeline generates per-sample isocall profiles. To perform joint isoform calling across selected samples, run isocall merge and call manually:
+
+```bash
+# 1. Merge selected sample profiles
+isocall merge \
+    --profiles results/isocall/profiles/SampleA/SampleA.profile.gz \
+                results/isocall/profiles/SampleB/SampleB.profile.gz \
+    --output merged.gz
+
+# 2. Joint-call isoforms across merged samples
+isocall call \
+    --merged-profile merged.gz \
+    --known-isoforms results/isocall/ref.isoforms.gz \
+    --reference /path/to/ref.fasta \
+    --output-prefix joint_calls
+```
+
+This two-step approach lets you choose which samples to include in joint-calling (e.g., group by condition, tissue type, or experiment).
+
+## Setting Up Clair3-RNA
+
+Clair3-RNA runs via a Singularity/Docker container (`hkubal/clair3-rna:latest`). On SLURM clusters with Singularity, the container is pulled automatically when you use the `singularity` profile. Ensure Singularity is available on your compute nodes.
+
+Available platforms for `--clair3_rna_platform`:
+
+| Platform | Description |
+|----------|-------------|
+| `hifi_mas_pbmm2` | Kinnex/MAS-Seq aligned with pbmm2 (default) |
+| `hifi_mas_minimap2` | Kinnex/MAS-Seq aligned with minimap2 |
+| `hifi_sequel2_pbmm2` | Sequel II aligned with pbmm2 |
+| `hifi_sequel2_minimap2` | Sequel II aligned with minimap2 |
+
+## Setting Up Isocall
+
+Download the isocall binary from [GitHub releases](https://github.com/PacificBiosciences/isocall/releases):
+
+```bash
+wget https://github.com/PacificBiosciences/isocall/releases/download/0.15.0/isocall-v0.15.0.gz
+gunzip isocall-v0.15.0.gz
+chmod +x isocall-v0.15.0
+```
+
+Then provide the path via `--isocall_binary /path/to/isocall-v0.15.0`.
 
 ## Configuration Files
 

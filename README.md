@@ -64,19 +64,32 @@ This pipeline processes PacBio Kinnex (MAS-Seq) long-read sequencing data for is
     │                                  └────────────────┘  │
     └──────────────────────────────────────────────────────┘
            │
-           ▼
-    ┌──────────────┐
-    │   RESULTS    │
-    │ (per sample) │
-    └──────────────┘
+           ├──────────────────────────────┐
+           ▼                              ▼
+    ┌──────────────────┐    ┌──────────────────────────────┐
+    │   CLAIR3-RNA     │    │      ISOCALL SUBWORKFLOW     │
+    │(variant calling) │    │  ┌────────────┐  ┌────────┐  │
+    │   (per sample)   │    │  │ PREP       │  │PROFILE │  │
+    └──────────────────┘    │  │(ref GTF)   │  │(per    │  │
+                            │  │            │  │sample) │  │
+                            │  └────────────┘  └────────┘  │
+                            └──────────────────────────────┘
+           │                              │
+           ▼                              ▼
+    ┌──────────────┐    ┌──────────────────────────────────┐
+    │  VCF files   │    │  Per-sample profiles for         │
+    │ (per sample) │    │  downstream merge & joint-call   │
+    └──────────────┘    └──────────────────────────────────┘
 ```
 
 ## Features
 
-- **Modular design** - Skip segmentation or pigeon classification as needed
+- **Modular design** - Skip segmentation, pigeon, variant calling, or isocall as needed
 - **Multi-sample support** - Process multiple pools and samples in parallel
 - **Flexible execution** - Run locally, on SLURM clusters, or in containers
-- **Comprehensive outputs** - Isoform classifications, QC reports, and execution metrics
+- **Variant calling** - SNP/indel calling from IsoSeq reads using Clair3-RNA
+- **Isoform profiling** - Per-sample isoform profiles via isocall for downstream joint-calling
+- **Comprehensive outputs** - Isoform classifications, VCFs, QC reports, and execution metrics
 - **Resume capability** - Restart from any point using Nextflow's `-resume` feature
 
 ## Requirements
@@ -94,12 +107,18 @@ This pipeline processes PacBio Kinnex (MAS-Seq) long-read sequencing data for is
 - `pbmm2` - PacBio minimap2 wrapper
 - `pigeon` - Isoform classification
 
+### Additional Tools
+
+- [Clair3-RNA](https://github.com/HKU-BAL/Clair3-RNA) - RNA variant caller (via Singularity/Docker container `hkubal/clair3-rna:latest`)
+- [isocall](https://github.com/PacificBiosciences/isocall) - Joint isoform calling (pre-downloaded binary)
+
 ### Reference Files
 
 - Reference genome FASTA (+ `.fai` index)
 - Annotation GTF (+ `.pgi` pigeon index)
 - MAS8 primers FASTA
 - IsoSeq primers FASTA
+- Isocall binary (download from [GitHub releases](https://github.com/PacificBiosciences/isocall/releases))
 
 ## Quick Start
 
@@ -110,6 +129,7 @@ nextflow run main.nf \
     --input samplesheet.tsv \
     --mas8_primers /path/to/mas8_primers.fasta \
     --isoseq_primers /path/to/IsoSeq_v2_primers_12.fasta \
+    --isocall_binary /path/to/isocall \
     --outdir results
 
 # Resume a failed run
@@ -162,6 +182,7 @@ bc1003--bc1003,SampleC
 | `--genome` | `GRCh38` | Genome key (see `conf/genomes.config`) |
 | `--ref_genome` | - | Override: custom reference FASTA path |
 | `--ref_annotation` | - | Override: custom annotation GTF path |
+| `--isocall_binary` | - | Path to pre-downloaded isocall binary |
 
 ### Output
 
@@ -176,6 +197,8 @@ bc1003--bc1003,SampleC
 |-----------|---------|-------------|
 | `--skip_segmentation` | `false` | Skip skera split (if BAMs already segmented) |
 | `--skip_pigeon` | `false` | Stop after isoseq collapse |
+| `--skip_variant_calling` | `false` | Skip Clair3-RNA variant calling |
+| `--skip_isocall` | `false` | Skip isocall isoform profiling |
 
 ### Resource Limits
 
@@ -231,6 +254,16 @@ results/
 │       ├── {sample}_classification.filtered_lite_classification.txt
 │       ├── {sample}_junctions.txt
 │       └── {sample}.saturation.txt
+├── variant_calling/
+│   └── {sample}/
+│       └── {sample}_clair3_rna/
+│           ├── output.vcf.gz
+│           └── output.vcf.gz.tbi
+├── isocall/
+│   ├── ref.isoforms.gz
+│   └── profiles/
+│       └── {sample}/
+│           └── {sample}.profile.gz
 └── pipeline_info/
     ├── execution_timeline.html
     ├── execution_report.html
@@ -274,12 +307,32 @@ nextflow run main.nf \
     --input samplesheet.tsv \
     ...
 
-# Custom work directory
+# Skip variant calling and isocall
 nextflow run main.nf \
     -profile slurm,conda \
-    -w /scratch/user/nf_work \
+    --skip_variant_calling \
+    --skip_isocall \
     --input samplesheet.tsv \
     ...
+```
+
+### Downstream Isocall Joint-Calling
+
+After the pipeline produces per-sample profiles, you can run isocall merge and call on selected samples:
+
+```bash
+# Merge selected sample profiles
+isocall merge \
+    --profiles results/isocall/profiles/SampleA/SampleA.profile.gz \
+                results/isocall/profiles/SampleB/SampleB.profile.gz \
+    --output merged.gz
+
+# Joint-call isoforms
+isocall call \
+    --merged-profile merged.gz \
+    --known-isoforms results/isocall/ref.isoforms.gz \
+    --reference /path/to/ref.fasta \
+    --output-prefix joint_calls
 ```
 
 ## Troubleshooting
@@ -324,3 +377,7 @@ This pipeline uses tools from [PacBio](https://www.pacb.com/):
 - [IsoSeq](https://github.com/PacificBiosciences/IsoSeq)
 - [pbmm2](https://github.com/PacificBiosciences/pbmm2)
 - [Pigeon](https://github.com/PacificBiosciences/pigeon)
+- [Isocall](https://github.com/PacificBiosciences/isocall)
+
+And from the community:
+- [Clair3-RNA](https://github.com/HKU-BAL/Clair3-RNA)

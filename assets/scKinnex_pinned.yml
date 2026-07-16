@@ -33,6 +33,7 @@ dependencies:
   - minimap2=2.30=h577a1d6_0
   - ncurses=6.5=h2d0b736_3
   - openssl=3.6.0=h26f9b46_0
+  - pbfusion=0.5.1=hdfd78af_0
   - pbmm2=1.17.0=h9ee0642_0
   - pbpigeon=1.4.0=h9948957_0
   - pbskera=1.4.0=hdfd78af_0

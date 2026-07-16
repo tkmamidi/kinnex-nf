@@ -4,12 +4,12 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - lima
-  - isoseq
-  - isoseq3
-  - pbmm2
-  - pbpigeon
-  - pbskera
-  - pbtk
-  - samtools
-  - minimap2
+  - lima=2.13.0
+  - isoseq=4.3.0
+  - isoseq3=4.0.0
+  - pbmm2=26.1.99
+  - pbpigeon=1.4.0
+  - pbskera=1.4.0
+  - pbtk=3.5.0
+  - samtools=1.23.1
+  - minimap2=2.30
